@@ -78,16 +78,16 @@ class TrainMacro():
 
 
     def search(self, available_only: bool = True) -> list:
-        trains = list()
         match self.platform:
             case Platform.SR:
-                trains = self.api.search_train(
+                return self.api.search_train(
                     dep=self.reservation.dep,
                     arr=self.reservation.arr,
                     time=self.reservation.time,
                     time_limit=self.reservation.time_limit,
                     available_only=available_only
                 )
+
             case Platform.KORAIL:
                 trains = self.api.search_train_allday(
                     dep=self.reservation.dep,
@@ -98,9 +98,16 @@ class TrainMacro():
                     passengers=self.reservation.passengers,
                     include_no_seats=(not available_only)
                 )
-                if self.reservation.time_limit != None:
-                    trains = [train for train in trains if int(self.reservation.time) <= int(train.dep_time) <= int(self.reservation.time_limit)]
-        return trains
+
+                if self.reservation.time == None:
+                    self.reservation.time = '000000'
+
+                if self.reservation.time_limit == None:
+                    return trains
+                else:
+                    return [train for train in trains if int(self.reservation.time) <= int(train.dep_time) <= int(self.reservation.time_limit)]
+
+        return []
 
 
 if __name__ == '__main__':
