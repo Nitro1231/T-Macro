@@ -3,6 +3,10 @@ from korail2 import *
 
 from enum import Enum
 from dataclasses import dataclass
+from datetime import datetime, timedelta, timezone
+
+
+KST = timezone(timedelta(hours=9))
 
 
 class Platform(Enum):
@@ -16,22 +20,30 @@ class Platform(Enum):
 #     WINDOW = 2
 
 
+def get_date() -> str:
+    return datetime.now(KST).strftime('%Y%m%d')
+
+
+def get_time() -> str:
+    return datetime.now(KST).strftime('%H%M00')
+
+
 @dataclass
 class Reservation:
     dep: str
     arr: str
-    date: str | None = None
-    time: str | None = None
+    date: str | None = get_date()
+    time: str | None = get_time()
+    time_limit: str | None = None
 
 
 @dataclass
 class SRReservation(Reservation):
-    time_limit: str | None = None
     passengers: list[Passenger] | None = None
     reserve_option: SeatType = SeatType.GENERAL_FIRST
     window: bool | None = None
 
-    def __str__(self) -> str:
+    def __repr__(self) -> str:
         return f'[SR] {self.__dict__}'
 
 
@@ -41,16 +53,16 @@ class KorailReservation(Reservation):
     passengers: list[Passenger] = None
     reserve_option: ReserveOption = None
 
-    def __str__(self) -> str:
+    def __repr__(self) -> str:
         return f'[KORAIL] {self.__dict__}'
 
 
 class TrainMacro():
-    def __init__(self, username: str, password: str, reservation: Reservation, login: bool = False) -> None:
+    def __init__(self, reservation: Reservation, username: str | None = None, password: str | None = None, login: bool = False) -> None:
+        self.reservation = reservation
         self.username = username
         self.password = password
-        self.reservation = reservation
-        
+
         if type(reservation) == SRReservation:
             self.platform = Platform.SR
             self.api = SRT(username, password, login)
@@ -66,9 +78,10 @@ class TrainMacro():
 
 
     def search(self, available_only: bool = True) -> list:
+        trains = list()
         match self.platform:
             case Platform.SR:
-                return self.api.search_train(
+                trains = self.api.search_train(
                     dep=self.reservation.dep,
                     arr=self.reservation.arr,
                     time=self.reservation.time,
@@ -76,7 +89,7 @@ class TrainMacro():
                     available_only=available_only
                 )
             case Platform.KORAIL:
-                return self.api.search_train(
+                trains = self.api.search_train_allday(
                     dep=self.reservation.dep,
                     arr=self.reservation.arr,
                     date=self.reservation.date,
@@ -85,15 +98,23 @@ class TrainMacro():
                     passengers=self.reservation.passengers,
                     include_no_seats=(not available_only)
                 )
-        raise ValueError
+                if self.reservation.time_limit != None:
+                    trains = [train for train in trains if int(self.reservation.time) <= int(train.dep_time) <= int(self.reservation.time_limit)]
+        return trains
 
 
-ktx = KorailReservation('서울', '부산', train_type=TrainType.KTX)
-srt = SRReservation('수서', '부산')
+if __name__ == '__main__':
+    print('This is a temporary test.')
+    ktx = KorailReservation('서울', '부산', '20230802', '000000', '053000', train_type=TrainType.KTX)
+    srt = SRReservation('수서', '부산')
 
-ktx_macro = TrainMacro(None, None, ktx)
-srt_macro = TrainMacro(None, None, srt)
+    print(ktx)
+    print(srt)
 
-print(ktx_macro.search())
-print()
-print(srt_macro.search())
+    ktx_macro = TrainMacro(ktx)
+    srt_macro = TrainMacro(srt)
+
+    print()
+    print(ktx_macro.search())
+    print()
+    print(srt_macro.search())
