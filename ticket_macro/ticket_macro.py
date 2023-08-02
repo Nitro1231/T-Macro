@@ -58,23 +58,36 @@ class KorailReservation(Reservation):
 
 
 class TrainMacro():
-    def __init__(self, reservation: Reservation, username: str | None = None, password: str | None = None, login: bool = False) -> None:
+    def __init__(self, reservation: Reservation, username: str | None = None, password: str | None = None, auto_login: bool = True) -> None:
         self.reservation = reservation
         self.username = username
         self.password = password
 
+        if username is None and password is None:
+            auto_login = False
+
         if type(reservation) == SRReservation:
             self.platform = Platform.SR
-            self.api = SRT(username, password, login)
+            self.api = SRT(username, password, auto_login)
         elif type(reservation) == KorailReservation:
             self.platform = Platform.KORAIL
-            self.api = Korail(username, password, login)
+            self.api = Korail(username, password, auto_login)
         else:
             raise ValueError
 
 
     def __str__(self) -> str:
         return str(self.reservation)
+
+
+    def login(self, username: str | None = None, password: str | None = None) -> bool:
+        if username is None:
+            username = self.username
+
+        if password is None:
+            password = self.password
+
+        return self.api.login(username, password)
 
 
     def search(self, available_only: bool = True) -> list:
@@ -99,29 +112,12 @@ class TrainMacro():
                     include_no_seats=(not available_only)
                 )
 
-                if self.reservation.time == None:
+                if self.reservation.time is None:
                     self.reservation.time = '000000'
 
-                if self.reservation.time_limit == None:
+                if self.reservation.time_limit is None:
                     return trains
                 else:
                     return [train for train in trains if int(self.reservation.time) <= int(train.dep_time) <= int(self.reservation.time_limit)]
 
         return []
-
-
-if __name__ == '__main__':
-    print('This is a temporary test.')
-    ktx = KorailReservation('서울', '부산', '20230802', '000000', '053000', train_type=TrainType.KTX)
-    srt = SRReservation('수서', '부산')
-
-    print(ktx)
-    print(srt)
-
-    ktx_macro = TrainMacro(ktx)
-    srt_macro = TrainMacro(srt)
-
-    print()
-    print(ktx_macro.search())
-    print()
-    print(srt_macro.search())
