@@ -90,6 +90,11 @@ class TrainMacro():
         return self.api.login(username, password)
 
 
+    def logout(self) -> bool:
+        self.api.logout()
+        return True
+
+
     def search(self, available_only: bool = True) -> list:
         match self.platform:
             case Platform.SR:

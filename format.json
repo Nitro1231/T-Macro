@@ -1,0 +1,26 @@
+{
+    "login_info": {
+        "ktx": {
+            "username": "YOUR_USERNAME",
+            "password": "YOUR_PASSWORD"
+        },
+        "srt": {
+            "username": "YOUR_USERNAME",
+            "password": "YOUR_PASSWORD"
+        }
+    },
+    "notification": {
+        "desktop": true,
+        "email": {
+
+        },
+        "sms": {
+            
+        }
+    },
+    "reservation": [
+        {
+            "type": "SRT"
+        }
+    ]
+}
