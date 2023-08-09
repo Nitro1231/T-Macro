@@ -1,0 +1,28 @@
+{
+    "login": {
+        "sr": {
+            "username": "YOUR_USERNAME",
+            "password": "YOUR_PASSWORD"
+        }
+    },
+    "notification": {
+        "desktop": true,
+        "email": {
+            "sender_email": "",
+            "sender_password": "",
+            "receiver_email": ""
+        }
+    },
+    "reservations": [
+        {
+            "type": "SRT",
+            "dep": "수서",
+            "arr": "동대구",
+            "date": "20230713",
+            "time": "090000",
+            "time_limit": "091000",
+            "reserve_option": "GENERAL_FIRST",
+            "window": true
+        }
+    ]
+}
